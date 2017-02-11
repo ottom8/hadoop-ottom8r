@@ -1,24 +1,24 @@
-package main
+package logging
 
 import (
 	"io"
 	"os"
 
-	logging "github.com/op/go-logging"
+	log "github.com/op/go-logging"
 )
 
-var log = logging.MustGetLogger("hadoop-ottom8r")
+var logger = log.MustGetLogger("hadoop-ottom8r")
 
 // Example format string. Everything except the message has a custom color
 // which is dependent on the log level. Many fields have a custom output
 // formatting too, eg. the time returns the hour down to the milli second.
-var format = logging.MustStringFormatter(
+var format = log.MustStringFormatter(
 	`%{color}%{time:2006-01-02T15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
-func initLogging(flags *flagOptions) {
+func initLogger(flags *flagOptions) {
 	if flags.DebugMode {
-		setupLogger(os.Stdout, logging.DEBUG)
+		setupLogger(os.Stdout, log.DEBUG)
 	} else {
 		out := setLogFile(flags.LogFile)
 		level := readLogLevel(flags.LogLevel)
@@ -29,26 +29,26 @@ func initLogging(flags *flagOptions) {
 func setLogFile(logfile string) *os.File {
 	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal("Failed to open log file ", logfile, ":", err)
+		logger.Fatal("Failed to open log file ", logfile, ":", err)
 	}
 	return file
 }
 
-func readLogLevel(loglevel string) logging.Level {
-	var level logging.Level
+func readLogLevel(loglevel string) log.Level {
+	var level log.Level
 	switch loglevel {
 	case "debug":
-		level = logging.DEBUG
+		level = log.DEBUG
 	case "info":
-		level = logging.INFO
+		level = log.INFO
 	case "notice":
-		level = logging.NOTICE
+		level = log.NOTICE
 	case "warning":
-		level = logging.WARNING
+		level = log.WARNING
 	case "error":
-		level = logging.ERROR
+		level = log.ERROR
 	case "critical":
-		level = logging.INFO
+		level = log.INFO
 	default:
 		log.Fatal("Illegal loglevel provided! Must be one of:" +
 			" debug, info, notice, warning, error, critical")
@@ -57,11 +57,11 @@ func readLogLevel(loglevel string) logging.Level {
 	return level
 }
 
-func setupLogger(out io.Writer, level logging.Level) {
-	// Initialize logging backend
-	stdoutBackend := logging.NewLogBackend(out, "", 0)
-	stdoutBackendFormatter := logging.NewBackendFormatter(stdoutBackend, format)
-	backendLeveled := logging.AddModuleLevel(stdoutBackendFormatter)
+func setupLogger(out io.Writer, level log.Level) {
+	// Initialize log backend
+	stdoutBackend := log.NewLogBackend(out, "", 0)
+	stdoutBackendFormatter := log.NewBackendFormatter(stdoutBackend, format)
+	backendLeveled := log.AddModuleLevel(stdoutBackendFormatter)
 	backendLeveled.SetLevel(level, "")
-	logging.SetBackend(backendLeveled)
+	log.SetBackend(backendLeveled)
 }
