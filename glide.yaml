@@ -1,0 +1,12 @@
+package: github.com/ottom8/hadoop-ottom8r
+import:
+- package: github.com/BurntSushi/toml
+  version: ~0.2.0
+- package: github.com/docopt/docopt-go
+  version: ~0.6.2
+- package: github.com/op/go-logging
+  version: ~1.0.0
+- package: github.com/parnurzeal/gorequest
+  version: ~0.2.14
+- package: github.com/go-resty/resty
+  version: ~0.10.0
