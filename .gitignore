@@ -1,0 +1,15 @@
+/dist
+gen.go
+.idea
+.intellij
+*.iml
+nifi-automate
+nifi-automate.toml
+*.test
+vendor/
+static/
+.vscode/
+site/
+*.log
+*.exe
+.DS_Store
