@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ottom8/hadoop-ottom8r/logger"
 )
 
 type flagOptions struct {
@@ -48,25 +50,6 @@ type Configurator interface {
 	Write()
 }
 
-func usageOutput() string {
-	usage := `hadoop-ottom8r
-
-Usage:
-  hadoop-ottom8r [--config <configFile>] [--loglevel <level>] [--logfile <file>] [--debug] [--mock]
-  hadoop-ottom8r (-h | --help)
-  hadoop-ottom8r --version
-
-Options:
-  -h --help                 Show this screen.
-  --version                 Show version.
-  --debug                   Set loglevel to debug and log to stdout
-  --mock						        Masquerade as Nifi Server - only used when in debug mode.
-  --config <configFile>     TOML format config file to use. [default: hadoop-ottom8r.toml]
-  --loglevel <level>        Set loglevel of program. [default: error]
-  --logfile <file>          Set file for logging. [default: hadoop-ottom8r.log]`
-	return usage
-}
-
 // Read info from associated config file
 func (tc *TomlConfig) Read() {
 	_, err := os.Stat(tc.Backup.ConfigFile)
@@ -101,11 +84,12 @@ func getNifiPort(tc TomlConfig) string {
 	return tc.Connection.NifiPort
 }
 
-func getNifiUser(tc TomlConfig) string {
+func GetNifiUser(tc TomlConfig) string {
 	return tc.Connection.NifiUser
 }
 
-func getNifiPass(tc TomlConfig) string {
+// GetNifiPass returns the NifiPass config
+func GetNifiPass(tc TomlConfig) string {
 	return tc.Connection.NifiPass
 }
 
@@ -117,7 +101,24 @@ func getFlags(arguments map[string]interface{}) *flagOptions {
 		LogFile:    arguments["--logfile"].(string),
 		Mock:       arguments["--mock"].(bool),
 	}
-	initLogging(flags)
-	log.Debug(fmt.Sprint(flags))
 	return flags
+}
+
+func LoadConfig(arguments map[string]interface{}) *TomlConfig {
+	// Initialize flags instance variable
+	flags := getFlags(arguments)
+	logger.InitLogger(flags)
+	log := logger.GetLogHandle()
+	log.Debug(fmt.Sprint(flags))
+	utilConfig := new(TomlConfig)
+	utilConfig.Backup.ConfigFile = flags.ConfigFile
+	utilConfig.Backup.DebugMode = strconv.FormatBool(flags.DebugMode)
+	utilConfig.Backup.LogLevel = flags.LogLevel
+	utilConfig.Backup.LogFile = flags.LogFile
+	utilConfig.Backup.Mock = strconv.FormatBool(flags.Mock)
+	utilConfig.Read()
+	log.Debug(fmt.Sprint(utilConfig))
+	log.Info("Loaded configuration.")
+	log.Debug(fmt.Sprint(utilConfig))
+	return utilConfig
 }
