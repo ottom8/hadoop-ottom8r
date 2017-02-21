@@ -10,3 +10,5 @@ import:
   version: ~0.2.14
 - package: github.com/go-resty/resty
   version: ~0.10.0
+- package: github.com/Sirupsen/logrus
+  version: ~0.11.2

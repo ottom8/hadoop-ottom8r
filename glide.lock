@@ -1,5 +1,5 @@
-hash: d8423c558a93a0473cf70632ab13d0fc8bf3660a832b39c36975c380123888d0
-updated: 2017-02-09T15:19:16.695232091-07:00
+hash: 2c748964aa56cd1745f1a006496bf12ff7208f5c3c830d918093f7e0c59167b1
+updated: 2017-02-21T13:03:01.173737191-07:00
 imports:
 - name: github.com/BurntSushi/toml
   version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
@@ -7,12 +7,12 @@ imports:
   version: 784ddc588536785e7299f7272f39101f7faccc3f
 - name: github.com/go-resty/resty
   version: 2e0c2310ba20c7edb6162ea2f6c0d5bba2e5e56d
-- name: github.com/moul/http2curl
-  version: 4e24498b31dba4683efb9d35c1c8a91e2eda28c8
 - name: github.com/op/go-logging
   version: b2cb9fa56473e98db8caba80237377e83fe44db5
 - name: github.com/parnurzeal/gorequest
-  version: 2aea80ce763523ecc6452e61c3727ae9595a5809
+  version: a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3
+- name: github.com/Sirupsen/logrus
+  version: c078b1e43f58d563c74cebe63c85789e76ddb627
 - name: golang.org/x/net
   version: 242b6b35177ec3909636b6cf6a47e8c2c6324b5d
   subpackages:

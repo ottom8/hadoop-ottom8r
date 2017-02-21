@@ -5,9 +5,11 @@ import (
 	"os"
 
 	logging "github.com/op/go-logging"
+	"github.com/Sirupsen/logrus"
 )
 
 var Log = logging.MustGetLogger("hadoop-ottom8r")
+var LogNew = logrus.New()
 
 // Example format string. Everything except the message has a custom color
 // which is dependent on the log level. Many fields have a custom output
