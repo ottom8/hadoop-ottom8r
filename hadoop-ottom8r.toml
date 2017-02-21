@@ -1,0 +1,12 @@
+[Backup]
+  backup_path = "/root/nifi-backup"
+  debug_mode = false
+  log_level = "debug"
+  log_file = "nifi-backup.log"
+  mock = true
+
+[Connection]
+  nifi_host = "https://pi-datamart-proxy.corp.chartercom.com"
+  nifi_user = "potto"
+  nifi_pass = ""
+  nifi_cert = "rootCA.pem"

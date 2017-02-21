@@ -1,6 +1,6 @@
 # A Self-Documenting Makefile: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 
-.PHONY: all build package lint test gotest help
+.PHONY: all build package lint test gotest vendor help
 .DEFAULT_GOAL := help
 
 REPO = $(eval REPO := $$(shell go list -f '{{.ImportPath}}' .))$(value REPO)
@@ -25,7 +25,7 @@ vendor: glide.yaml ## Install vendor dependencies
 	glide install -v
 
 test: ## Run all tests
-	vendor gotest blackbox
+	vendor gotest lint
 
 gotest: ## Run Go tests
 	go test $(shell glide novendor)
@@ -55,7 +55,7 @@ lint: ## Run linters
 	# ifndef GOX
 	# 	$(error "gox is not available. Install using `go get github.com/mitchellh/gox`")
 	# endif
-build: vendor test ## Build hadoop-ottom8r
+build: ## Build hadoop-ottom8r
 	@echo "set version to ${PACKAGE_VERSION}"
 
 	@rm -rf build/

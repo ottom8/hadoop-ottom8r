@@ -5,10 +5,9 @@ import (
 	"os"
 
 	logging "github.com/op/go-logging"
-	"github.com/ottom8/hadoop-ottom8r/conf"
 )
 
-var log = logging.MustGetLogger("hadoop-ottom8r")
+var Log = logging.MustGetLogger("hadoop-ottom8r")
 
 // Example format string. Everything except the message has a custom color
 // which is dependent on the log level. Many fields have a custom output
@@ -17,21 +16,21 @@ var format = logging.MustStringFormatter(
 	`%{color}%{time:2006-01-02T15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
-func init() {
-	// Temporary log setting until config is read
-	SetupLogger(os.Stdout, logging.ERROR)
-}
+//func init() {
+//	// Temporary log setting until config is read
+//	SetupBareLogger()
+//}
 
 func GetLogHandle() *logging.Logger {
-	return log
+	return Log
 }
 
-func InitLogger(flags *conf.FlagOptions) {
-	if flags.DebugMode {
+func InitLogger(debug bool, logFile string, logLevel string) {
+	if debug {
 		SetupLogger(os.Stdout, logging.DEBUG)
 	} else {
-		out := setLogFile(flags.LogFile)
-		level := readLogLevel(flags.LogLevel)
+		out := setLogFile(logFile)
+		level := readLogLevel(logLevel)
 		SetupLogger(out, level)
 	}
 }
@@ -39,7 +38,7 @@ func InitLogger(flags *conf.FlagOptions) {
 func setLogFile(logfile string) *os.File {
 	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal("Failed to open log file ", logfile, ":", err)
+		Log.Fatal("Failed to open log file ", logfile, ":", err)
 	}
 	return file
 }
@@ -60,7 +59,7 @@ func readLogLevel(loglevel string) logging.Level {
 	case "critical":
 		level = logging.INFO
 	default:
-		log.Fatal("Illegal loglevel provided! Must be one of:" +
+		Log.Fatal("Illegal loglevel provided! Must be one of:" +
 			" debug, info, notice, warning, error, critical")
 		os.Exit(1)
 	}
@@ -74,4 +73,10 @@ func SetupLogger(out io.Writer, level logging.Level) {
 	backendLeveled := logging.AddModuleLevel(stdoutBackendFormatter)
 	backendLeveled.SetLevel(level, "")
 	logging.SetBackend(backendLeveled)
+}
+
+// SetupBareLogger is a convenience function for starting logging before
+// the logging configuration is known.
+func SetupBareLogger() {
+	SetupLogger(os.Stdout, logging.ERROR)
 }
