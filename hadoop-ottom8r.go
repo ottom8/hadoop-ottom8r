@@ -40,7 +40,7 @@ func main() {
 	//log = logger.GetLogHandle()
 	arguments, optErr := docopt.Parse(usageOutput(), nil, true, "hadoop-ottom8r 0.1.0", false)
 	if optErr != nil {
-		logger.Log.Fatal(optErr)
+		logger.Fatal(fmt.Sprint(optErr))
 	}
 
 	utilConfig := loadConfig(arguments)
@@ -48,7 +48,7 @@ func main() {
 	//runtime.GOMAXPROCS(4)
 	startupMessage := fmt.Sprintf("hadoop-ottom8r started\n")
 	fmt.Printf(startupMessage)
-	logger.Log.Info(startupMessage)
+	logger.Info(startupMessage)
 
 	nifi.DoBackup(utilConfig)
 }
@@ -56,7 +56,7 @@ func main() {
 func loadConfig(arguments map[string]interface{}) *conf.TomlConfig {
 	// Initialize flags instance variable
 	flags := conf.GetFlags(arguments)
-	logger.Log.Debug(fmt.Sprint(flags))
+	logger.Debug(fmt.Sprint(flags))
 	utilConfig := new(conf.TomlConfig)
 	utilConfig.Backup.ConfigFile = flags.ConfigFile
 	//utilConfig.Backup.DebugMode = strconv.FormatBool(flags.DebugMode)
@@ -68,8 +68,8 @@ func loadConfig(arguments map[string]interface{}) *conf.TomlConfig {
 	utilConfig.Read()
 	logger.InitLogger(utilConfig.Backup.DebugMode, utilConfig.Backup.LogFile,
 		utilConfig.Backup.LogLevel)
-	logger.Log.Debug(fmt.Sprint(utilConfig))
-	logger.Log.Info("Loaded configuration.")
-	logger.Log.Debug(fmt.Sprint(utilConfig))
+	logger.Debug(fmt.Sprint(utilConfig))
+	logger.Info("Loaded configuration.")
+	logger.Debug(fmt.Sprint(utilConfig))
 	return utilConfig
 }

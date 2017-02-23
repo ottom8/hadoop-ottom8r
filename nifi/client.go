@@ -29,7 +29,7 @@ func Call(fn Handler, req Request) *resty.Response {
 // RestCall is a wrapper to make REST calls
 func (fn restHandler) RestCall(req Request) *resty.Response {
 	resp, err := fn(req); if err != nil {
-		logger.Log.Error(err.Error())
+		logger.Error(fmt.Sprintf(err.Error()))
 	}
 	return resp
 }
@@ -46,10 +46,11 @@ func setCredentials(user string, password string) {
 	nifiClient.SetBasicAuth(user, password)
 }
 
-func setDefaultHeader(header string) {
+func setDefaultHeader(contentType string, dataType string) {
 	nifiClient.
-		SetHeader("Content-Type", header).
-		SetHeader("Accept", header)
+		SetHeader("Content-Type", contentType).
+		SetHeader("Accept", contentType).
+		SetHeader("Data-Type", dataType)
 }
 
 func setDefaultHostURL(hostURL string) {
@@ -58,29 +59,23 @@ func setDefaultHostURL(hostURL string) {
 
 func setDefaultRootCert(pemFilePath string) {
 	resp := nifiClient.SetRootCertificate(fmt.Sprintf("resources/%s", pemFilePath))
-	logger.Log.Debug(fmt.Sprintf("%+v", resp))
+	logger.Debug(fmt.Sprint(resp))
 }
 
 func setDefaultTLSClientConfig(config *tls.Config) {
 	resp := nifiClient.SetTLSClientConfig(config)
-	logger.Log.Debug(fmt.Sprintf("%+v", resp))
+	logger.Debug(fmt.Sprint(resp))
 }
 
 func getProcessGroup(req Request) (*resty.Response, error) {
 	resp, err := nifiClient.R().
 		Get(fmt.Sprintf("/%s/%s", endpointProcessGroups, req.Id))
-	//if err != nil {
-	//	logger.Log.Error(err.Error())
-	//}
 	return resp, err
 }
 
 func postProcessGroupTemplate(req Request) (*resty.Response, error) {
-	logger.Log.Debug(fmt.Sprintf("%+v", req.Body))
+	logger.Debug(req.Body)
 	resp, err := nifiClient.R().
 		Post(fmt.Sprintf("/%s/%s/templates", endpointProcessGroups, req.Id))
-	//if err != nil {
-	//	logger.Log.Error(err.Error())
-	//}
 	return resp, err
 }

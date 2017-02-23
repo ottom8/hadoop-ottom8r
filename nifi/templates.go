@@ -2,21 +2,30 @@ package nifi
 
 import (
 	"text/template"
+	"bytes"
 
-	"github.com/go-resty/resty"
+	"github.com/ottom8/hadoop-ottom8r/logger"
 )
 
-const postTemplateBody = `
+const tmplPostPGTemplateBody = `
 {
   "name": "{{.Name}}",
   "description": "{{.Description}}"
 }
 `
 
-func doPostTemplate(processGroupId string) *resty.Response {
-	t := template.New("Process Group Template")
-	t, _ = t.Parse(postTemplateBody)
-	myResp := Call(restHandler(postProcessGroupTemplate),
-		Request{Id: "root", Body: })
+type postPGTemplateBody struct {
+	Name string
+	Description string
+}
+
+func doProcessGroupTemplate(postBody *postPGTemplateBody) string {
+	var out bytes.Buffer
+
+	tmpl, _ := template.New("Process Group Template").Parse(tmplPostPGTemplateBody)
+	if err := tmpl.Execute(&out, postBody); err  != nil {
+		logger.Fatal(err.Error())
+	}
+	return out.String()
 }
 

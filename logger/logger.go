@@ -5,24 +5,58 @@ import (
 	"os"
 
 	logging "github.com/op/go-logging"
+	"reflect"
+	"strconv"
 )
 
-var Log = logging.MustGetLogger("hadoop-ottom8r")
+type Password string
+
+func (p Password) Redacted() interface{} {
+	return logging.Redact(string(p))
+}
+
+var log = logging.MustGetLogger("hadoop-ottom8r")
 
 // Example format string. Everything except the message has a custom color
 // which is dependent on the log level. Many fields have a custom output
 // formatting too, eg. the time returns the hour down to the milli second.
-var format = logging.MustStringFormatter(
-	`%{color}%{time:2006-01-02T15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-)
+var formatStr = `%{color}%{time:2006-01-02T15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
+var format = logging.MustStringFormatter(formatStr)
 
 //func init() {
 //	// Temporary log setting until config is read
 //	SetupBareLogger()
 //}
 
-func GetLogHandle() *logging.Logger {
-	return Log
+func Fatal(out string) {
+	log.Fatal(out)
+}
+
+func Error(out string) {
+	log.Error(out)
+}
+
+func Info(out string) {
+	log.Info(out)
+}
+
+func Debug(out string) {
+	log.Debug(out)
+}
+
+func OutputStruct(myStruct interface{}) string {
+	var out string
+	v := reflect.ValueOf(myStruct)
+
+	for i := 0; i < v.NumField(); i++ {
+		out += v.Type().Field(i).Name + ":"
+		if v.Type().Field(i).Type.String() == "bool" {
+			out += strconv.FormatBool(v.Field(i).Bool()) + " "
+		} else {
+			out += v.Field(i).String() + " "
+		}
+	}
+	return out
 }
 
 func InitLogger(debug bool, logFile string, logLevel string) {
@@ -38,7 +72,7 @@ func InitLogger(debug bool, logFile string, logLevel string) {
 func setLogFile(logfile string) *os.File {
 	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		Log.Fatal("Failed to open log file ", logfile, ":", err)
+		log.Fatal("Failed to open log file ", logfile, ":", err)
 	}
 	return file
 }
@@ -59,7 +93,7 @@ func readLogLevel(loglevel string) logging.Level {
 	case "critical":
 		level = logging.INFO
 	default:
-		Log.Fatal("Illegal loglevel provided! Must be one of:" +
+		log.Fatal("Illegal loglevel provided! Must be one of:" +
 			" debug, info, notice, warning, error, critical")
 		os.Exit(1)
 	}
