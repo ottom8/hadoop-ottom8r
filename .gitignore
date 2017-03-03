@@ -10,6 +10,6 @@ vendor/
 static/
 .vscode/
 site/
-*.log
+*.log*
 *.exe
 .DS_Store

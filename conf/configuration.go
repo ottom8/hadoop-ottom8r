@@ -41,6 +41,7 @@ type ConnectionInfo struct {
 	NifiUser string 	`toml:"nifi_user"`
 	NifiPass string 	`toml:"nifi_pass"`
 	NifiCert string 	`toml:"nifi_cert"`
+	NifiToken string	`toml:"nifi_token"`
 }
 
 // Configurator is an interface for configuration related use.
@@ -109,6 +110,19 @@ func (tc *TomlConfig) GetNifiUser() string {
 // GetNifiPass returns the NifiPass config
 func (tc *TomlConfig) GetNifiPass() string {
 	return tc.Connection.NifiPass
+}
+
+// GetNifiToken returns the NifiToken config
+func (tc *TomlConfig) GetNifiToken() string {
+	return tc.Connection.NifiToken
+}
+
+// SetNifiToken updates the NifiToken config
+func (tc *TomlConfig) SetNifiToken(token string) {
+	if token != tc.Connection.NifiToken {
+		tc.Connection.NifiToken = token
+		tc.Write()
+	}
 }
 
 // GetNifiCert returns the NifiCert config

@@ -15,6 +15,8 @@ func (p Password) Redacted() interface{} {
 	return logging.Redact(string(p))
 }
 
+const clearOldLogs bool = true
+
 var log = logging.MustGetLogger("hadoop-ottom8r")
 
 // Example format string. Everything except the message has a custom color
@@ -70,7 +72,15 @@ func InitLogger(debug bool, logFile string, logLevel string) {
 }
 
 func setLogFile(logfile string) *os.File {
-	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	var (
+		file *os.File
+		err error
+	)
+	if clearOldLogs {
+		file, err = os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	} else {
+		file, err = os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	}
 	if err != nil {
 		log.Fatal("Failed to open log file ", logfile, ":", err)
 	}

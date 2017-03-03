@@ -8,8 +8,25 @@ import (
 )
 
 const (
+	hdrContentType = "Content-Type"
+	hdrAccept = "Accept"
+	typeAppJson = "application/json"
+	typeText = "text/plain"
+	typeForm = "application/x-www-form-urlencoded"
+
+	endpointAccess = "access"
+	endpointAccessToken = "access/token"
+	endpointFlow = "flow"
 	endpointProcessGroups = "process-groups"
 )
+
+type CredentialsInfo struct {
+	user string
+	password string
+	authToken string
+}
+
+var credentials CredentialsInfo
 
 type Request struct {
 	Id		string
@@ -41,16 +58,43 @@ func init() {
 	nifiClient = resty.New()
 }
 
-// SetCredentials sets the user and pass for client
-func setCredentials(user string, password string) {
-	nifiClient.SetBasicAuth(user, password)
+// SetClientCredentials sets the client token (if present) else user and pass
+// for client
+func setClientCredentials() {
+	nifiClient.SetAuthToken(credentials.authToken)
+	if !isAuthValid() {
+		myResp := Call(restHandler(postAccessToken), Request{})
+		setAuthToken(string(myResp.Body()))
+	}
 }
 
-func setDefaultHeader(contentType string, dataType string) {
+// SetCredentials sets the package credentials var and establishes client
+// auth returns current token
+func setCredentials(user string, password string, token string) string {
+	credentials = CredentialsInfo{user: user, password: password,
+		authToken:token}
+	setClientCredentials()
+	return credentials.authToken
+}
+
+func isAuthValid() bool {
+	if credentials.authToken == "" {
+		return false
+	}
+	myResp := Call(restHandler(getAccess), Request{})
+	return myResp.StatusCode() == 200
+}
+
+func setAuthToken(token string) {
+	credentials.authToken = token
+	nifiClient.SetAuthToken(token)
+
+}
+
+func setDefaultHeader(contentType string) {
 	nifiClient.
-		SetHeader("Content-Type", contentType).
-		SetHeader("Accept", contentType).
-		SetHeader("Data-Type", dataType)
+		SetHeader(hdrContentType, contentType).
+		SetHeader(hdrAccept, contentType)
 }
 
 func setDefaultHostURL(hostURL string) {
@@ -67,9 +111,34 @@ func setDefaultTLSClientConfig(config *tls.Config) {
 	logger.Debug(fmt.Sprint(resp))
 }
 
+// postAccessToken performs a login against Nifi to create and consume an
+// auth token
+func postAccessToken(_ Request) (*resty.Response, error) {
+	resp, err := nifiClient.R().
+		SetHeader(hdrContentType, typeForm).
+		SetHeader(hdrAccept, typeText).
+		SetBody(fmt.Sprintf("username=%s&password=%s",
+			credentials.user, credentials.password)).
+		Post(fmt.Sprintf("/%s", endpointAccessToken))
+	return resp, err
+}
+
+func getAccess(_ Request) (*resty.Response, error) {
+	resp, err := nifiClient.R().
+			Get(fmt.Sprintf("/%s", endpointAccess))
+	return resp, err
+}
+
 func getProcessGroup(req Request) (*resty.Response, error) {
 	resp, err := nifiClient.R().
 		Get(fmt.Sprintf("/%s/%s", endpointProcessGroups, req.Id))
+	return resp, err
+}
+
+func getProcessGroupFlow(req Request) (*resty.Response, error) {
+	resp, err := nifiClient.R().
+			Get(fmt.Sprintf("/%s/%s/%s", endpointFlow,
+		endpointProcessGroups, req.Id))
 	return resp, err
 }
 

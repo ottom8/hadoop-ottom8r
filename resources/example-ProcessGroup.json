@@ -1,0 +1,80 @@
+{
+  "revision": {
+    "version": 0
+  },
+  "id": "8d1d9a24-0158-1000-da01-5d861f4c2834",
+  "uri": "https://pi-datamart-proxy.corp.chartercom.com/nifi-api/process-groups/8d1d9a24-0158-1000-da01-5d861f4c2834",
+  "position": {
+    "x": 0,
+    "y": 0
+  },
+  "permissions": {
+    "canRead": true,
+    "canWrite": true
+  },
+  "bulletins": [],
+  "component": {
+    "id": "8d1d9a24-0158-1000-da01-5d861f4c2834",
+    "position": {
+      "x": 0,
+      "y": 0
+    },
+    "name": "NiFi Flow",
+    "comments": "",
+    "runningCount": 123,
+    "stoppedCount": 15,
+    "invalidCount": 1,
+    "disabledCount": 0,
+    "activeRemotePortCount": 2,
+    "inactiveRemotePortCount": 0,
+    "inputPortCount": 2,
+    "outputPortCount": 0
+  },
+  "status": {
+    "id": "8d1d9a24-0158-1000-da01-5d861f4c2834",
+    "name": "NiFi Flow",
+    "statsLastRefreshed": "23:23:38 CST",
+    "aggregateSnapshot": {
+      "id": "8d1d9a24-0158-1000-da01-5d861f4c2834",
+      "name": "NiFi Flow",
+      "connectionStatusSnapshots": [],
+      "processorStatusSnapshots": [],
+      "remoteProcessGroupStatusSnapshots": [],
+      "inputPortStatusSnapshots": [],
+      "outputPortStatusSnapshots": [],
+      "flowFilesIn": 49,
+      "bytesIn": 0,
+      "input": "49 (0 bytes)",
+      "flowFilesQueued": 3754838,
+      "bytesQueued": 53918917951,
+      "queued": "3,754,838 (50.22 GB)",
+      "queuedCount": "3,754,838",
+      "queuedSize": "50.22 GB",
+      "bytesRead": 44513828983,
+      "read": "41.46 GB",
+      "bytesWritten": 46680319470,
+      "written": "43.47 GB",
+      "flowFilesOut": 0,
+      "bytesOut": 0,
+      "output": "0 (0 bytes)",
+      "flowFilesTransferred": 4938014,
+      "bytesTransferred": 69951711571,
+      "transferred": "4,938,014 (65.15 GB)",
+      "bytesReceived": 36871551152,
+      "flowFilesReceived": 1326777,
+      "received": "1,326,777 (34.34 GB)",
+      "bytesSent": 0,
+      "flowFilesSent": 49,
+      "sent": "49 (0 bytes)",
+      "activeThreadCount": 228
+    }
+  },
+  "runningCount": 123,
+  "stoppedCount": 15,
+  "invalidCount": 1,
+  "disabledCount": 0,
+  "activeRemotePortCount": 2,
+  "inactiveRemotePortCount": 0,
+  "inputPortCount": 2,
+  "outputPortCount": 0
+}
