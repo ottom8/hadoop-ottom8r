@@ -25,52 +25,6 @@ var log = logging.MustGetLogger("hadoop-ottom8r")
 var formatStr = `%{color}%{time:2006-01-02T15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`
 var format = logging.MustStringFormatter(formatStr)
 
-//func init() {
-//	// Temporary log setting until config is read
-//	SetupBareLogger()
-//}
-
-func Fatal(out string) {
-	log.Fatal(out)
-}
-
-func Error(out string) {
-	log.Error(out)
-}
-
-func Info(out string) {
-	log.Info(out)
-}
-
-func Debug(out string) {
-	log.Debug(out)
-}
-
-func OutputStruct(myStruct interface{}) string {
-	var out string
-	v := reflect.ValueOf(myStruct)
-
-	for i := 0; i < v.NumField(); i++ {
-		out += v.Type().Field(i).Name + ":"
-		if v.Type().Field(i).Type.String() == "bool" {
-			out += strconv.FormatBool(v.Field(i).Bool()) + " "
-		} else {
-			out += v.Field(i).String() + " "
-		}
-	}
-	return out
-}
-
-func InitLogger(debug bool, logFile string, logLevel string) {
-	if debug {
-		SetupLogger(os.Stdout, logging.DEBUG)
-	} else {
-		out := setLogFile(logFile)
-		level := readLogLevel(logLevel)
-		SetupLogger(out, level)
-	}
-}
-
 func setLogFile(logfile string) *os.File {
 	var (
 		file *os.File
@@ -104,14 +58,61 @@ func readLogLevel(loglevel string) logging.Level {
 		level = logging.INFO
 	default:
 		log.Fatal("Illegal loglevel provided! Must be one of:" +
-			" debug, info, notice, warning, error, critical")
+				" debug, info, notice, warning, error, critical")
 		os.Exit(1)
 	}
 	return level
 }
 
+// Fatal is a wrapper for log Fatal.
+func Fatal(out string) {
+	log.Fatal(out)
+}
+
+// Error is a wrapper for log Error.
+func Error(out string) {
+	log.Error(out)
+}
+
+// Info is a wrapper for log Info.
+func Info(out string) {
+	log.Info(out)
+}
+
+// Debug is a wrapper for log Debug.
+func Debug(out string) {
+	log.Debug(out)
+}
+
+// OutputStruct prints out a struct.
+func OutputStruct(myStruct interface{}) string {
+	var out string
+	v := reflect.ValueOf(myStruct)
+
+	for i := 0; i < v.NumField(); i++ {
+		out += v.Type().Field(i).Name + ":"
+		if v.Type().Field(i).Type.String() == "bool" {
+			out += strconv.FormatBool(v.Field(i).Bool()) + " "
+		} else {
+			out += v.Field(i).String() + " "
+		}
+	}
+	return out
+}
+
+// InitLogger sets up the loggers' backend for use.
+func InitLogger(debug bool, logFile string, logLevel string) {
+	if debug {
+		SetupLogger(os.Stdout, logging.DEBUG)
+	} else {
+		out := setLogFile(logFile)
+		level := readLogLevel(logLevel)
+		SetupLogger(out, level)
+	}
+}
+
+// SetupLogger initializes log backend.
 func SetupLogger(out io.Writer, level logging.Level) {
-	// Initialize log backend
 	stdoutBackend := logging.NewLogBackend(out, "", 0)
 	stdoutBackendFormatter := logging.NewBackendFormatter(stdoutBackend, format)
 	backendLeveled := logging.AddModuleLevel(stdoutBackendFormatter)
