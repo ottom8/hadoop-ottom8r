@@ -11,3 +11,5 @@ import:
 - package: github.com/go-resty/resty
   version: ~0.10.0
 - package: github.com/Jeffail/gabs
+- package: github.com/onsi/gomega
+  version: ~1.0.0

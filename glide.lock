@@ -1,5 +1,5 @@
-hash: 985cd6cfcd562f2e848715cd89cb3087a133440e3998e8089d4ea36fa21805dc
-updated: 2017-02-24T06:47:49.327014305-07:00
+hash: 91963b8dbaac03b46e21977de54fd37755cc0aff1592c5cd3684127f69bbcf47
+updated: 2017-03-04T15:09:49.737891348-07:00
 imports:
 - name: github.com/BurntSushi/toml
   version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
@@ -9,6 +9,8 @@ imports:
   version: 2e0c2310ba20c7edb6162ea2f6c0d5bba2e5e56d
 - name: github.com/Jeffail/gabs
   version: 2a3aa15961d5fee6047b8151b67ac2f08ba2c48c
+- name: github.com/onsi/gomega
+  version: a78ae492d53aad5a7a232d0d0462c14c400e3ee7
 - name: github.com/op/go-logging
   version: b2cb9fa56473e98db8caba80237377e83fe44db5
 - name: github.com/parnurzeal/gorequest

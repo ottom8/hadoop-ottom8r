@@ -7,39 +7,6 @@ import (
 	"fmt"
 )
 
-type Snippet struct {
-	Id				string `json:"id"`
-	URI				string `json:"uri"`
-	ParentGroupId	string `json:"parentGroupId"`
-	SnippetGroups 	[]SnippetGroup `json:"snippetGroups,omit"`
-}
-
-type SnippetGroup struct {
-	Name			string `json:"name"`
-	SnippetItems 	[]SnippetItem `json:"snippetItems,omit"`
-}
-
-type SnippetItem struct {
-	Name 			string `json:"name"`
-	ClientId 		string `json:"clientId"`
-	Version 		float64 `json:"version"`
-	LastModifier 	string `json:"lastModifier"`
-}
-
-func (s *Snippet) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Id            string `json:"id"`
-		URI           string `json:"uri"`
-		ParentGroupId string `json:"parentGroupId"`
-		SnippetGroups []SnippetGroup `json:""`
-	}{
-		Id: s.Id,
-		URI: s.URI,
-		ParentGroupId: s.ParentGroupId,
-		SnippetGroups: s.SnippetGroups,
-	})
-}
-
 func processGetProcessGroup(respBody []byte) {
 	jsonParsed, _ := gabs.ParseJSON(respBody)
 	logger.Debug(fmt.Sprintf("%+v", jsonParsed))
@@ -55,68 +22,75 @@ func getMapKeys(inMap map[string]*gabs.Container) []string {
 	return keys
 }
 
-func getSnippetItem(item *gabs.Container) *SnippetItem {
-	snippetItem := SnippetItem{LastModifier:"", ClientId:""}
-	snippetItem.Name = item.Path("id").Data().(string)
-	snippetItem.Version = item.Path("revision.version").Data().(float64)
-	if snippetItem.Version > 0 {
-		snippetItem.ClientId = item.Path("revision.clientId").Data().(string)
+func getSnippetItem(item *gabs.Container) (map[string]interface{}, string) {
+	itemId := item.Path("id").Data().(string)
+	itemVersion := item.Path("revision.version").Data().(float64)
+	snippetItem := map[string]interface{} {"version": itemVersion}
+	if itemVersion > 0 {
+		snippetItem["clientId"] = item.Path("revision.clientId").Data().(string)
 	}
-	return &snippetItem
+	//snippetItem := map[string]interface{} {itemId: innerItem}
+	return snippetItem, itemId
 }
 
-func getSnippetGroup(groupName string, jsonParsed *gabs.Container) *SnippetGroup {
-	snippetGroup := SnippetGroup{Name:groupName}
-	itemMap, _ := jsonParsed.
-		Path(fmt.Sprintf("processGroupFlow.flow.%s", groupName)).Children()
+func getSnippetGroup(groupName string, jsonParsed *gabs.Container) map[string]interface{} {
+	itemMap, _ := jsonParsed.Path("processGroupFlow.flow." + groupName).Children()
+	snippetGroup := map[string]interface{} {}
 	if len(itemMap) > 0 {
 		for _, item := range itemMap {
-			snippetItem := getSnippetItem(item)
-			snippetGroup.SnippetItems = append(snippetGroup.SnippetItems, *snippetItem)
+			snippetItem, itemId := getSnippetItem(item)
+			snippetGroup[itemId] = snippetItem
 		}
 	}
-	return &snippetGroup
+	//snippetGroup := map[string]interface{} {groupName: innerGroup}
+	return snippetGroup
 }
 
-func getSnippet(jsonParsed *gabs.Container) *Snippet {
-	snippet := Snippet{Id:"", URI:""}
-	snippet.ParentGroupId = jsonParsed.Path("processGroupFlow.id").Data().(string)
+func getSnippet(jsonParsed *gabs.Container) map[string]interface{} {
+	parentGroupId := jsonParsed.Path("processGroupFlow.id").Data().(string)
+	subSnippet := map[string]interface{} {"parentGroupId": parentGroupId}
 	groupMap, _ := jsonParsed.Path("processGroupFlow.flow").ChildrenMap()
 	groups := getMapKeys(groupMap)
-	logger.Debug(fmt.Sprintf("%+v", groups))
+	//logger.Debug(fmt.Sprintf("%+v", groups))
 	for _, group := range groups {
 		snippetGroup := getSnippetGroup(group, jsonParsed)
-		snippet.SnippetGroups = append(snippet.SnippetGroups, *snippetGroup)
+		subSnippet[group] = snippetGroup
 	}
-	return &snippet
+	snippet := map[string]interface{} {"snippet": subSnippet}
+	return snippet
 }
 
-func getSnippetJson(snippet *Snippet) []byte {
-	jsonRaw, err := json.Marshal(snippet)
+func getJson(structured interface{}) []byte {
+	jsonRaw, err := json.Marshal(structured)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 	return jsonRaw
 }
 
+func getSnippetId(jsonParsed *gabs.Container) string {
+	return jsonParsed.Path("snippet.id").Data().(string)
+}
+
+// ProcessGetProcessGroupFlow takes the response body from flow/ProcessGroup
+// and returns a JSON payload to create a snippet
 func ProcessGetProcessGroupFlow(respBody []byte) []byte {
 	jsonParsed, _ := gabs.ParseJSON(respBody)
 	snippet := getSnippet(jsonParsed)
-	//logger.Debug(fmt.Sprintf("%+v", snippet))
-	snippetJson := getSnippetJson(snippet)
-	logger.Debug(fmt.Sprintf("%s",snippetJson))
+	snippetJson := getJson(snippet)
+	//logger.Debug(fmt.Sprintf("%s",snippetJson))
 	return snippetJson
 }
 
-func ProcessGetProcessGroupFlow1(respBody []byte) {
+// ProcessSnippetResponse takes the response body from snippets post
+// and returns snippetId.
+func ProcessSnippetResponse(respBody []byte) string {
 	jsonParsed, _ := gabs.ParseJSON(respBody)
-	groupIds, _ := jsonParsed.
-		Path("processGroupFlow.flow.remoteProcessGroups.id").Children()
-	//for key, child := range children {
-	//	logger.Debug(fmt.Sprintf("key: %v, value: %v", key, child.Data().(string)))
-	//}
-	logger.Debug(fmt.Sprintf("%+v", groupIds))
-	revisions, _ := jsonParsed.
-		Path("processGroupFlow.flow.remoteProcessGroups.revision").Children()
-	logger.Debug(fmt.Sprintf("%+v", revisions))
+	snippetId := getSnippetId(jsonParsed)
+	return snippetId
+}
+
+// ProcessTemplateRequest builds a request body for a templates post
+func ProcessTemplateRequest(tmplBody map[string]interface{}) []byte {
+	return getJson(tmplBody)
 }

@@ -20,6 +20,7 @@ const (
 	endpointProcessGroups = "process-groups"
 )
 
+// CredentialsInfo holds the authentication credentials for Nifi.
 type CredentialsInfo struct {
 	user string
 	password string
@@ -28,22 +29,25 @@ type CredentialsInfo struct {
 
 var credentials CredentialsInfo
 
+// Request holds Id and Body for REST requests.
 type Request struct {
 	Id		string
-	Body	string
+	Body	interface{}
 }
 
+// Handler interface provides an error-handling wrapper for REST calls.
 type Handler interface {
 	RestCall(Request) *resty.Response
 }
 
 type restHandler func(Request) (*resty.Response, error)
 
+// Call is used to invoke functions of type Handler.
 func Call(fn Handler, req Request) *resty.Response {
 	return Handler(fn).RestCall(req)
 }
 
-// RestCall is a wrapper to make REST calls
+// RestCall is a wrapper to make REST calls.
 func (fn restHandler) RestCall(req Request) *resty.Response {
 	resp, err := fn(req); if err != nil {
 		logger.Error(fmt.Sprintf(err.Error()))
@@ -143,8 +147,15 @@ func getProcessGroupFlow(req Request) (*resty.Response, error) {
 }
 
 func postProcessGroupTemplate(req Request) (*resty.Response, error) {
-	logger.Debug(req.Body)
+	logger.Debug(fmt.Sprintf("%s",req.Body))
 	resp, err := nifiClient.R().
 		Post(fmt.Sprintf("/%s/%s/templates", endpointProcessGroups, req.Id))
+	return resp, err
+}
+
+func postSnippets(req Request) (*resty.Response, error) {
+	resp, err := nifiClient.R().
+		SetBody(req).
+		Post("/snippets")
 	return resp, err
 }

@@ -10,13 +10,15 @@ import (
 const tmplPostPGTemplateBody = `
 {
   "name": "{{.Name}}",
-  "description": "{{.Description}}"
+  "description": "{{.Description}}",
+  "snippetId": "{{.SnippetId}}"
 }
 `
 
 type postPGTemplateBody struct {
-	Name string
+	Name        string
 	Description string
+	SnippetId   float64
 }
 
 func doProcessGroupTemplate(postBody *postPGTemplateBody) string {
