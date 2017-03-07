@@ -15,7 +15,7 @@ func (p Password) Redacted() interface{} {
 	return logging.Redact(string(p))
 }
 
-const clearOldLogs bool = true
+const clearOldLogs bool = false
 
 var log = logging.MustGetLogger("hadoop-ottom8r")
 

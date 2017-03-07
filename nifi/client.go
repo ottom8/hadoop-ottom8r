@@ -11,6 +11,7 @@ const (
 	hdrContentType = "Content-Type"
 	hdrAccept = "Accept"
 	typeAppJson = "application/json"
+	typeAppXml = "application/xml"
 	typeText = "text/plain"
 	typeForm = "application/x-www-form-urlencoded"
 
@@ -18,6 +19,7 @@ const (
 	endpointAccessToken = "access/token"
 	endpointFlow = "flow"
 	endpointProcessGroups = "process-groups"
+	endpointTemplates = "templates"
 )
 
 // CredentialsInfo holds the authentication credentials for Nifi.
@@ -141,21 +143,30 @@ func getProcessGroup(req Request) (*resty.Response, error) {
 
 func getProcessGroupFlow(req Request) (*resty.Response, error) {
 	resp, err := nifiClient.R().
-			Get(fmt.Sprintf("/%s/%s/%s", endpointFlow,
+		Get(fmt.Sprintf("/%s/%s/%s", endpointFlow,
 		endpointProcessGroups, req.Id))
+	return resp, err
+}
+
+func getTemplate(req Request) (*resty.Response, error) {
+	resp, err := nifiClient.R().
+		SetHeader(hdrAccept, typeAppXml).
+		Get(fmt.Sprintf("/%s/%s/download", endpointTemplates, req.Id))
 	return resp, err
 }
 
 func postProcessGroupTemplate(req Request) (*resty.Response, error) {
 	logger.Debug(fmt.Sprintf("%s",req.Body))
 	resp, err := nifiClient.R().
-		Post(fmt.Sprintf("/%s/%s/templates", endpointProcessGroups, req.Id))
+		SetBody(req.Body).
+		Post(fmt.Sprintf("/%s/%s/%s", endpointProcessGroups,
+			req.Id, endpointTemplates))
 	return resp, err
 }
 
 func postSnippets(req Request) (*resty.Response, error) {
 	resp, err := nifiClient.R().
-		SetBody(req).
+		SetBody(req.Body).
 		Post("/snippets")
 	return resp, err
 }

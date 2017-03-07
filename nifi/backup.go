@@ -7,6 +7,9 @@ import (
 	"github.com/ottom8/hadoop-ottom8r/conf"
 	"github.com/ottom8/hadoop-ottom8r/logger"
 	"fmt"
+	"io/ioutil"
+	"github.com/ottom8/hadoop-ottom8r/util"
+	"os"
 )
 
 // Currently hold Process Group ID in a const to simplify modification when
@@ -15,6 +18,7 @@ const processGroupId = "8d1d9a24-0158-1000-da01-5d861f4c2834"
 
 // DoBackup contains the business logic for performing Nifi backups.
 func DoBackup(tc *conf.TomlConfig) {
+	var backupMessage string
 	logger.Debug(fmt.Sprint(tc))
 	initClient(tc)
 	myResp := Call(restHandler(getProcessGroupFlow),
@@ -26,7 +30,19 @@ func DoBackup(tc *conf.TomlConfig) {
 	tmplBody["snippetId"] = ProcessSnippetResponse(myResp.Body())
 	myResp = Call(restHandler(postProcessGroupTemplate),
 		Request{Id: processGroupId, Body: ProcessTemplateRequest(tmplBody)})
+	tmplId := ProcessTemplateResponse(myResp.Body())
+	myResp = Call(restHandler(getTemplate),
+		Request{Id: tmplId})
 	logger.Debug(fmt.Sprint(myResp))
+	if writeBackup(tc.Backup.BackupPath, tmplBody["name"].(string),
+		myResp.Body(), true) {
+		backupMessage = fmt.Sprintf("Nifi Backup successful\n")
+	} else {
+		backupMessage = fmt.Sprintf("Nifi Backup failed\n")
+	}
+
+	fmt.Printf(backupMessage)
+	logger.Info(backupMessage)
 }
 
 func initClient(tc *conf.TomlConfig) {
@@ -47,4 +63,20 @@ func generateBackupName(hostName string, pgId string) map[string]interface{} {
 		Sprintf("Exported template of ProcessGroupId %s from host %s.",
 			pgId, hostName)
 	return map[string]interface{} {"name": backupName, "description": backupDescription}
+}
+
+func writeBackup(backupPath string, backupName string, payload []byte,
+		compress bool) bool {
+	backupFile := fmt.Sprintf("%s/%s.xml", backupPath, backupName)
+	err := ioutil.WriteFile(backupFile, payload, 0644)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+	if compress {
+		util.Tar(backupFile, backupPath)
+		util.Gzip(backupFile + ".tar", backupPath)
+		os.Remove(backupFile)
+		os.Remove(backupFile + ".tar")
+	}
+	return true
 }

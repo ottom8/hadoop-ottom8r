@@ -69,7 +69,13 @@ func getJson(structured interface{}) []byte {
 }
 
 func getSnippetId(jsonParsed *gabs.Container) string {
+	logger.Debug(fmt.Sprintf("%+v", jsonParsed))
 	return jsonParsed.Path("snippet.id").Data().(string)
+}
+
+func getTemplateId(jsonParsed *gabs.Container) string {
+	logger.Debug(fmt.Sprintf("%+v", jsonParsed))
+	return jsonParsed.Path("template.id").Data().(string)
 }
 
 // ProcessGetProcessGroupFlow takes the response body from flow/ProcessGroup
@@ -78,7 +84,7 @@ func ProcessGetProcessGroupFlow(respBody []byte) []byte {
 	jsonParsed, _ := gabs.ParseJSON(respBody)
 	snippet := getSnippet(jsonParsed)
 	snippetJson := getJson(snippet)
-	//logger.Debug(fmt.Sprintf("%s",snippetJson))
+	logger.Debug(fmt.Sprintf("%s",snippetJson))
 	return snippetJson
 }
 
@@ -88,6 +94,14 @@ func ProcessSnippetResponse(respBody []byte) string {
 	jsonParsed, _ := gabs.ParseJSON(respBody)
 	snippetId := getSnippetId(jsonParsed)
 	return snippetId
+}
+
+// ProcessTemplateResponse takes the response body from template create post
+// and returns templateId.
+func ProcessTemplateResponse(respBody []byte) string {
+	jsonParsed, _ := gabs.ParseJSON(respBody)
+	templateId := getTemplateId(jsonParsed)
+	return templateId
 }
 
 // ProcessTemplateRequest builds a request body for a templates post
