@@ -3,7 +3,6 @@
   nifi_user = ""
   nifi_pass = ""
   nifi_cert = ""
-  nifi_token = ""
 
 [Backup]
   backup_path = "/tmp/nifi-backup"

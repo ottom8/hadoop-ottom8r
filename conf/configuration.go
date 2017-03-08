@@ -8,6 +8,12 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/ottom8/hadoop-ottom8r/logger"
+	"github.com/ottom8/hadoop-ottom8r/util"
+)
+
+const (
+	authConfigFile = "auth.toml"
+	encryptKey = "H@d00pS3cret3ncryptK3yS3cur3RlLg"
 )
 
 type flagOptions struct {
@@ -17,6 +23,18 @@ type flagOptions struct {
 	LogLevel   string
 	LogFile    string
 	Mock       bool
+	Encrypt    bool
+}
+
+// AppConfig defines all configuration for this app
+type AppConfig struct {
+	AuthConfig
+	TomlConfig
+}
+
+// AuthConfig defines Auth file structure
+type AuthConfig struct {
+	NifiToken string `toml:"nifi_token"`
 }
 
 // TomlConfig defines TOML file structure
@@ -41,7 +59,6 @@ type ConnectionInfo struct {
 	NifiUser string 	`toml:"nifi_user"`
 	NifiPass string 	`toml:"nifi_pass"`
 	NifiCert string 	`toml:"nifi_cert"`
-	NifiToken string	`toml:"nifi_token"`
 }
 
 // Configurator is an interface for configuration related use.
@@ -54,6 +71,11 @@ type Configurator interface {
 //func (fo *flagOptions) String() string {
 //	return fmt.Sprintf("%+v", fo)
 //}
+
+// String method returns the AppConfig object as a string.
+func (ac *AppConfig) String() string {
+	return "AppConfig: {" + ac.TomlConfig.String() + " " + ac.AuthConfig.String() + "}"
+}
 
 // String method returns the TomlConfig object as a string.
 func (tc *TomlConfig) String() string {
@@ -69,6 +91,39 @@ func (bi BackupInfo) String() string {
 func (ci ConnectionInfo) String() string {
 	return fmt.Sprintf("Connection: {NifiHost:%s NifiCert:%s NifiUser:%s NifiPass:********}",
 		ci.NifiHost, ci.NifiCert, ci.NifiUser)
+}
+
+// String method returns the AuthConfig object as a string.
+func (ac AuthConfig) String() string {
+	return fmt.Sprintf("AuthConfig: {NifiToken:%s}", ac.NifiToken)
+}
+
+// Read info from associated config file
+func (ac *AuthConfig) Read() {
+	_, err := os.Stat(authConfigFile)
+	if err != nil {
+		logger.Info(fmt.Sprintf("AuthConfig file %s is missing, creating. ",
+			authConfigFile))
+		ac.Write()
+	}
+	if _, err := toml.DecodeFile(authConfigFile, ac); err != nil {
+		logger.Fatal(fmt.Sprint(err))
+	}
+	logger.Debug(fmt.Sprint(ac))
+}
+
+// Write out new auth config file
+func (ac *AuthConfig) Write() {
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(ac); err != nil {
+		logger.Fatal(fmt.Sprint(err))
+	}
+	logger.Debug(buf.String())
+	err := ioutil.WriteFile(authConfigFile, buf.Bytes(), 0644)
+	if err != nil {
+		logger.Fatal(fmt.Sprint(err))
+	}
+	logger.Info("Wrote new auth config file.")
 }
 
 // Read info from associated config file
@@ -97,6 +152,11 @@ func (tc *TomlConfig) Write() {
 	logger.Info("Wrote new TOML config file.")
 }
 
+// Encrypt performs encryption on plaintext passwords in config file.
+func (tc *TomlConfig) Encrypt() {
+	tc.SetNifiPass(tc.Connection.NifiPass)
+}
+
 // GetNifiHost returns the NifiHost config
 func (tc *TomlConfig) GetNifiHost() string {
 	return tc.Connection.NifiHost
@@ -107,20 +167,16 @@ func (tc *TomlConfig) GetNifiUser() string {
 	return tc.Connection.NifiUser
 }
 
-// GetNifiPass returns the NifiPass config
+// GetNifiPass decrypts and returns the NifiPass config
 func (tc *TomlConfig) GetNifiPass() string {
-	return tc.Connection.NifiPass
+	return util.Base64Decrypt(tc.Connection.NifiPass, encryptKey)
 }
 
-// GetNifiToken returns the NifiToken config
-func (tc *TomlConfig) GetNifiToken() string {
-	return tc.Connection.NifiToken
-}
-
-// SetNifiToken updates the NifiToken config
-func (tc *TomlConfig) SetNifiToken(token string) {
-	if token != tc.Connection.NifiToken {
-		tc.Connection.NifiToken = token
+// SetNifiPass encrypts and stores the NifiPass config
+func (tc *TomlConfig) SetNifiPass(pass string) {
+	outbound := util.Base64Encrypt(pass, encryptKey)
+	if outbound != tc.Connection.NifiPass {
+		tc.Connection.NifiPass = outbound
 		tc.Write()
 	}
 }
@@ -130,6 +186,19 @@ func (tc *TomlConfig) GetNifiCert() string {
 	return tc.Connection.NifiCert
 }
 
+// GetNifiToken returns the NifiToken config
+func (ac *AuthConfig) GetNifiToken() string {
+	return ac.NifiToken
+}
+
+// SetNifiToken updates the NifiToken config
+func (ac *AuthConfig) SetNifiToken(token string) {
+	if token != ac.NifiToken {
+		ac.NifiToken = token
+		ac.Write()
+	}
+}
+
 func GetFlags(arguments map[string]interface{}) *flagOptions {
 	flags := &flagOptions{
 		ConfigFile: arguments["--config"].(string),
@@ -137,6 +206,7 @@ func GetFlags(arguments map[string]interface{}) *flagOptions {
 		LogLevel:   arguments["--loglevel"].(string),
 		LogFile:    arguments["--logfile"].(string),
 		Mock:       arguments["--mock"].(bool),
+		Encrypt:    arguments["--encrypt"].(bool),
 	}
 	return flags
 }

@@ -1,10 +1,11 @@
 /dist
+build/
 gen.go
 .idea
 .intellij
 *.iml
-nifi-automate
-nifi-automate.toml
+hadoop-ottom8r
+*.toml
 *.test
 vendor/
 static/

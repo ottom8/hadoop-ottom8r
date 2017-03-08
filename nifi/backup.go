@@ -17,16 +17,16 @@ import (
 const processGroupId = "8d1d9a24-0158-1000-da01-5d861f4c2834"
 
 // DoBackup contains the business logic for performing Nifi backups.
-func DoBackup(tc *conf.TomlConfig) {
+func DoBackup(ac *conf.AppConfig) {
 	var backupMessage string
-	logger.Debug(fmt.Sprint(tc))
-	initClient(tc)
+	logger.Debug(fmt.Sprint(ac))
+	initClient(ac)
 	myResp := Call(restHandler(getProcessGroupFlow),
 		Request{Id: processGroupId})
 	jsonSnippet := ProcessGetProcessGroupFlow(myResp.Body())
 	myResp = Call(restHandler(postSnippets),
 		Request{Body: jsonSnippet})
-	tmplBody := generateBackupName(tc.Connection.NifiHost, processGroupId)
+	tmplBody := generateBackupName(ac.Connection.NifiHost, processGroupId)
 	tmplBody["snippetId"] = ProcessSnippetResponse(myResp.Body())
 	myResp = Call(restHandler(postProcessGroupTemplate),
 		Request{Id: processGroupId, Body: ProcessTemplateRequest(tmplBody)})
@@ -34,7 +34,7 @@ func DoBackup(tc *conf.TomlConfig) {
 	myResp = Call(restHandler(getTemplate),
 		Request{Id: tmplId})
 	logger.Debug(fmt.Sprint(myResp))
-	if writeBackup(tc.Backup.BackupPath, tmplBody["name"].(string),
+	if writeBackup(ac.Backup.BackupPath, tmplBody["name"].(string),
 		myResp.Body(), true) {
 		backupMessage = fmt.Sprintf("Nifi Backup successful\n")
 	} else {
@@ -45,14 +45,15 @@ func DoBackup(tc *conf.TomlConfig) {
 	logger.Info(backupMessage)
 }
 
-func initClient(tc *conf.TomlConfig) {
+func initClient(ac *conf.AppConfig) {
 	setDefaultHeader(typeAppJson)
-	setDefaultHostURL(tc.GetNifiHost())
-	//setDefaultRootCert(tc.GetNifiCert())
+	setDefaultHostURL(ac.GetNifiHost())
+	//setDefaultRootCert(ac.GetNifiCert())
 	setDefaultTLSClientConfig(&tls.Config{ InsecureSkipVerify: true })
-	token := setCredentials(tc.GetNifiUser(),
-		tc.GetNifiPass(), tc.GetNifiToken())
-	tc.SetNifiToken(token)
+	//logger.Debug(fmt.Sprintf("%+v", ac.GetNifiPass()))
+	token := setCredentials(ac.GetNifiUser(),
+		ac.GetNifiPass(), ac.GetNifiToken())
+	ac.SetNifiToken(token)
 }
 
 func generateBackupName(hostName string, pgId string) map[string]interface{} {
